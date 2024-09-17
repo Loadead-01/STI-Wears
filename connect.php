@@ -17,7 +17,4 @@
     if (!$conn2) {
         die("Connection failed: " . mysqli_connect_error());
     }
-    
-
-
-?>
+    ?>
