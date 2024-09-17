@@ -1,0 +1,53 @@
+
+
+.navbar-brand {
+  text-decoration: none;
+  background: #FBFBFB;
+}
+
+
+.color-yellow {
+  background-color: #FFE10F !important;
+  color: #353535 !important;
+  font-weight: bold !important;
+}
+
+.color-blue {
+  background-color: #2198f4 !important;
+  color: #F0F0F0 !important;
+  font-weight: bold !important;
+}
+
+
+#form-sec {
+  /* background-image: url("assets/LP_2.png");
+  background-size: cover; */
+  background-color: #FFFFFF;
+
+}
+
+.testing {
+  height: 10%;
+}
+
+[popover]::backdrop {
+  backdrop-filter: blur(3px);
+  background-color: rgba(0, 0, 0, 0.3);
+  
+}
+
+button {
+  text-align: center;
+}
+
+#testingg1 {
+  width: 50px;
+}
+
+li {
+  cursor: pointer;
+}
+
+.color-white {
+  background-color: #ffffff !important;
+}

@@ -1,3 +1,8 @@
+<?php
+    include 'function/admin_session_func.php';
+
+?>  
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +11,6 @@
     <title>Document</title>
 </head>
 <body>
-    <h1> SO THIS IS THE power of git</h1>
+    
 </body>
 </html>
