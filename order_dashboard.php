@@ -11,6 +11,6 @@
     <title>Document</title>
 </head>
 <body>
-    
+    <?php include 'admin_header.php' ?>
 </body>
 </html>

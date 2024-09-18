@@ -1,6 +1,6 @@
 <?php
-    include "function/session_func.php";
-    require_once "connect.php";
+     include "function/session_func.php";
+     require_once "connect.php";
 ?>
 
 <!DOCTYPE html>

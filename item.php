@@ -53,8 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $price = floatval($_POST['price']);
     $total_price = $quantity * $price;
     
+    if (!empty($size) && $quantity <= 5) {
 
-    if (isset($_POST['action']) && $_POST['action'] == 'add_to_cart') {
+    if (isset($_POST['action']) && $_POST['action'] == 'add_to_cart') { //add to cart
         // Add to cart functionality using user_account (conn)
         $sql_cart = "INSERT INTO `user_account`.`cart` (account_id, item_id, size, quantity, price) VALUES (?, ?, ?, ?, ?)";
         $stmt_cart = $conn->prepare($sql_cart);
@@ -66,9 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($stmt_cart->error) {
             die('Execute failed: ' . $stmt_cart->error);
         }
-        header("Location: cart.php"); // Redirect to cart page
-        exit;
-    } else {
+        
+        
+    } else { //buy now
         // Place order functionality using user_account (conn)
         $sql_order = "INSERT INTO `user_account`.`order` (account_id, student_id, ordered_by, section, total_price, status) 
                       VALUES (?, ?, ?, ?, ?, 'pending')";
@@ -99,6 +100,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         header("Location: order.php?order_id=$order_id");
         exit;
     } 
+} else {
+    echo "<div class='alert alert-danger m-0'> Please check your order details. Make sure you choose a size and quantity cant be higher than 5</div>";
+}
 } 
 
 ?>
@@ -118,6 +122,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: white;
         }
     </style>
+
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous" />
+
 </head>
 
 <body>
@@ -160,14 +171,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <input type="number" name="quantity" id="quantity" class="form-control" min="1" value="1" required>
                     </div>
 
-                    <button type="button" class="btn btn-primary" id="add-to-cart">Add to Cart</button>
+                    <button type="button" class="btn btn-primary" id="add-to-cart" data-bs-toggle="modal" data-bs-target="#exampleModal">Add to Cart</button>
                     <button type="submit" class="btn btn-success" id="place-order">Order Now</button>
+
+                    <!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+                    
                 </form>
             </div>
         </div>
     </div>
 
+
+
     <script>
+        document.getElementById('add-to-cart').addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
         // Update price and stock when size buttons are clicked
         const sizeButtons = document.querySelectorAll('.size-btn');
         const priceDisplay = document.getElementById('price-display');
@@ -200,6 +236,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             document.getElementById('order-form').submit();
         });
     </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
 
 </body>
 
