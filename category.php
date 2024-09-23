@@ -44,6 +44,8 @@
         echo "No valid category ID in URL.<br>";
         exit;
     }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -64,23 +66,22 @@
         <div class="d-flex flex-wrap col-12 border justify-content-center color-white p-5">
             <?php if (!empty($items)) { ?>
                 <?php foreach ($items as $item) { ?>
-                    <div class="card col-4 border m-2" style="min-width: 235px; min-height: 100px">
+                    <a href="item.php?id=<?php echo $item['product_id']; ?>" class="card col-2 border m-2" style="min-width: 235px; min-height: 100px; text-decoration: none; color: inherit;">
                         <div class="row m-0 p-0">
                             <div class="col-sm-6 p-0">
                                 <!-- Dynamically load the image from the database -->
                                 <img src="<?php echo htmlspecialchars($item['image_path'] ?? 'assets/default_image.png'); ?>" class="border border-success img-fluid" alt="Item Image">
                             </div>
-                            <div class="col-sm-6 d-flex align-items-center justify-content-center p-0 m-0">
+                            <div class="col-sm-6 d-flex align-items-center border justify-content-center p-0 m-0 shadow-sm">
                                 <div class="card-body px-2 p-0">
-                                    <h5 class="lh-1 fs-md-1"><?php echo htmlspecialchars($item['product_name']); ?></h5>
-                                    <hr>
-                                    <p class="lh-1 text-grey fs-6 p-0 m-0">Stock: <?php echo htmlspecialchars($item['stock']); ?></p>
-                                    <p class="fs-6 lh-1 text-grey p-0 m-0">PHP <?php echo htmlspecialchars($item['price']); ?></p>
-                                    <a class='btn btn-success' href='item.php?id=<?php echo htmlspecialchars($item['product_id']); ?>'>Buy now</a>
+                                    <h6 class="lh-1 fs-md-1 my-2" style="vertical-align: middle;"><?php echo htmlspecialchars($item['product_name']); ?></h6>
+                                    <hr class="m-0">
+                                    <p class="lh-1 text-grey small p-0 my-2" style="">Stock: <?php echo htmlspecialchars($item['stock']); ?></p>
+                                    <p class="small lh-1 text-grey p-0 my-2">PHP <?php echo htmlspecialchars($item['price']); ?></p>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 <?php } ?>
             <?php } else { ?>
                 <p class="text-center">No items available in this category.</p>

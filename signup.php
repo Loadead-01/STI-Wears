@@ -1,5 +1,14 @@
 <?php
 $student_ID = $student_email = $full_name = $section = $username = $password = $confirm_password = "";
+$errors = [
+    'student_ID' => '',
+    'student_email' => '',
+    'full_name' => '',
+    'section' => '',
+    'username' => '',
+    'password' => '',
+    'confirm_password' => '',
+];
 
 session_start();
 
@@ -17,9 +26,6 @@ if (isset($_POST["submit"])) {
     $password = $_POST["password"];
     $confirm_password = $_POST["confirm_password"];
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
-    $errors = array();
-    
-    
 
     // Check for empty fields
     if (empty($student_ID) || empty($student_email) || empty($full_name) || empty($section) || empty($username) || empty($password) || empty($confirm_password)) {
@@ -28,61 +34,81 @@ if (isset($_POST["submit"])) {
 
     // Validate email
     if (!filter_var($student_email, FILTER_VALIDATE_EMAIL)) {
-        array_push($errors, "Email is not valid");
+        $errors['student_email'] = "Email is not valid";
+    } elseif (!preg_match('/@cubao\.sti\.edu\.ph$/', $student_email)) {
+        $errors['student_email'] = "Only email addresses from @cubao.sti.edu.ph are allowed";
     }
 
     // Validate password length
     if (strlen($password) < 8) {
-        array_push($errors, "Password must be at least 8 characters long");
+        $errors['password'] = "Password must be at least 8 characters long";
     }
 
-    // Validate student ID length
-    if (strlen($student_ID) == 10) {
-        array_push($errors, "Student ID must be 11 characters long");
+    // Validate student ID
+    if (empty($student_ID)) {
+        $errors['student_ID'] = "Student ID is required";
+    } elseif (!preg_match('/^[0-9]{11}$/', $student_ID)) {
+        $errors['student_ID'] = "Student ID must be exactly 11 characters long and can only contain numbers";
     }
 
     // Validate password match
     if ($password !== $confirm_password) {
-        array_push($errors, "Password doesn't match");
+        $errors['confirm_password'] = "Password doesn't match";
+    }
+
+    // Validate section
+    if (empty($section)) {
+        $errors['section'] = "Section is required";
+    } elseif (!preg_match('/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9 ]{1,12}$/', $section)) {
+        $errors['section'] = "Section must be between 1 and 12 characters, and must contain at least one letter and one number. Only letters, numbers, and spaces are allowed.";
+    }
+
+    // Validate full name
+    if (empty($full_name)) {
+        $errors['full_name'] = "Full name is required";
+    } elseif (count(explode(' ', $full_name)) < 2) {
+        $errors['full_name'] = "Full name must have firstname and lastname";
+    } elseif (preg_match('/\d/', $full_name)) {
+        $errors['full_name'] = "Full name should not contain numbers";
+    }
+
+    // Validate username
+    if (empty($username)) {
+        $errors['username'] = "Username is required";
+    } elseif (!preg_match('/^[a-zA-Z0-9_]{6,20}$/', $username)) {
+        $errors['username'] = "Username must be between 6 and 20 characters, and can only contain letters, numbers, and underscores";
     }
 
     require_once "connect.php";
-    $sql = "SELECT * FROM account WHERE username = '$username'"; //query
-    $result = mysqli_query($conn, $sql); 
-    $rowCount = mysqli_num_rows($result); // 
-    if ($rowCount > 0) {
-        array_push($errors, "User already exist!");
+
+    // Check for existing username
+    $sql = "SELECT * FROM account WHERE username = '$username'";
+    $result = mysqli_query($conn, $sql);
+    if (mysqli_num_rows($result) > 0) {
+        $errors['username'] = "User already exists!";
     }
 
-    $sql1 = "SELECT * FROM account WHERE  student_ID = '$student_ID'"; //query
+    // Check for existing student ID
+    $sql1 = "SELECT * FROM account WHERE student_ID = '$student_ID'";
     $result1 = mysqli_query($conn, $sql1);
-    $rowCount1 = mysqli_num_rows($result1); //
-
-    if ($rowCount1 > 0) {
-        array_push($errors, "Student ID already exist! Message us for assistance");
-
+    if (mysqli_num_rows($result1) > 0) {
+        $errors['student_ID'] = "Student ID already exists! Message us for assistance.";
     }
 
-    if (count($errors) > 0) {
-        foreach ($errors as $error) {
-            echo "<div class='alert alert-danger'>$error</div>";
-        }
-    } else {
-        require_once "connect.php";
+    // If no errors, insert into database
+    if (!array_filter($errors)) {
         $sql = "INSERT INTO account (student_id, username, password, full_name, section, student_email) VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = mysqli_stmt_init($conn);
-        $prepareStmt = mysqli_stmt_prepare($stmt, $sql);
-        if ($prepareStmt) {
+        if (mysqli_stmt_prepare($stmt, $sql)) {
             mysqli_stmt_bind_param($stmt, "ssssss", $student_ID, $username, $password_hash, $full_name, $section, $student_email);
             mysqli_stmt_execute($stmt);
-            echo "<div class='alert alert-success'> account created successfully</div>";
+            echo "<div class='alert alert-success'>Account created successfully</div>";
         } else {
-            die("something wnet wrong");
+            die("Something went wrong");
         }
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -90,55 +116,104 @@ if (isset($_POST["submit"])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sign up</title>
+    <title>Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <style>
+        .text-danger {
+            color: red;
+            /* Red color for error messages */
+        }
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossorigin="anonymous" />
+        .small {
+            font-size: 0.8rem;
+            /* Smaller font size */
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 40px;
+            /* Space for the eye icon */
+        }
+
+        .password-wrapper .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            user-select: none;
+            /* Prevents text selection on click */
+        }
+    </style>
 </head>
 
 <body>
-    
-  <nav class="navbar navbar-expand-sm color-blue sticky-top" style=" background-color: #2198f4 !important;  color: #F0F0F0 !important; font-weight: bold !important; ">
-        <div class="container-xxl align-items-center ">
+    <nav class="navbar navbar-expand-sm" style="background-color: #2198f4; color: #F0F0F0; font-weight: bold;">
+        <div class="container-xxl align-items-center">
             <a id="logo" class="navbar-brand mx-4 border text-dark bg-light" href="index.php">STI Wears</a>
         </div>
     </nav>
 
-
-
-    <div class="container" style="margin-top: 20px">
-
+    <div class="container mt-5">
         <div class="row justify-content-center">
-
-            <form action="signup.php" method="POST" class="col-7 border p-5 bg-light-subtle shadow">
+            <form action="signup.php" method="POST" class="col-11 col-md-7 border p-md-5 p-3 bg-light-subtle shadow form">
                 <label class="form-label">Student ID (02000363495)</label>
-                <input type="text" class="form-control" id="stud_ID" name="student_ID" value="<?php echo $student_ID ?>"/>
+                <input type="text" class="form-control" name="student_ID" value="<?php echo $student_ID; ?>" />
+                <div class="text-danger small mb-3"><?php echo $errors['student_ID']; ?></div>
+
                 <label class="form-label">Student Email (juan.123456@cubao.sti.edu.ph)</label>
-                <input type="text" class="form-control" id="email" name="student_email" value="<?php echo $student_email ?>"/>
+                <input type="text" class="form-control" name="student_email" value="<?php echo $student_email; ?>" />
+                <div class="text-danger small mb-3"><?php echo $errors['student_email']; ?></div>
+
                 <label class="form-label">Full name (Juan Luna)</label>
-                <input type="text" class="form-control" id="name" name="full_name" value="<?php echo $full_name ?>"/>
+                <input type="text" class="form-control" name="full_name" value="<?php echo $full_name; ?>" />
+                <div class="text-danger small mb-3"><?php echo $errors['full_name']; ?></div>
+
                 <label class="form-label">Strand / Course (ITM 101 / BSIT 101)</label>
-                <input type="text" class="form-control" id="section" name="section" value="<?php echo $section ?>" />
+                <input type="text" class="form-control" name="section" value="<?php echo $section; ?>" />
+                <div class="text-danger small mb-3 "><?php echo $errors['section']; ?></div>
+
                 <label class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" value="<?php echo $username ?>"/>
+                <input type="text" class="form-control" name="username" value="<?php echo $username; ?>" />
+                <div class="text-danger small mb-3"><?php echo $errors['username']; ?></div>
+
                 <label class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" />
+                <div class="password-wrapper">
+                    <input type="password" class="form-control" name="password" />
+                    <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+                </div>
+                <div class="text-danger small mb-3"><?php echo $errors['password']; ?></div>
+
                 <label class="form-label">Confirm Password</label>
-                <input type="password" class="form-control" id="confirm_password" name="confirm_password" />
+                <div class="password-wrapper">
+                    <input type="password" class="form-control" name="confirm_password" />
+                    <span class="toggle-password" onclick="togglePassword('confirm_password')">👁️</span>
+                </div>
+                <div class="text-danger small mb-3"><?php echo $errors['confirm_password']; ?></div>
+
                 <hr>
-                <input type="submit" value="register" name="submit" class="bg-success radius-sm text-light border-1 col-12 my-3 p-3">
+                <input type="submit" value="Register" name="submit" class="bg-success radius-sm text-light border-1 col-12 my-3 p-3">
             </form>
         </div>
     </div>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
+    <script>
+        function togglePassword(inputId) {
+            var passwordInput = document.getElementsByName(inputId)[0];
+            var eyeIcon = passwordInput.nextElementSibling;
 
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.textContent = '🙈'; // Change icon when password is visible
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.textContent = '👁️'; // Change back to eye icon
+            }
+        }
+    </script>
 </body>
 
 </html>

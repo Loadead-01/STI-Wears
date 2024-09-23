@@ -23,9 +23,9 @@
     <a href="admin_dashboard.php" class="btn btn-primary" > Dashboard </a> 
 
         <a href="add_item.php" class="btn btn-primary" > Add new item </a> 
-        <a href="#" class="btn btn-primary" > Inventory Management </a> <!-- Restock, Remove item -->
+        <a href="stock_management.php" class="btn btn-primary" > Stock Management </a> <!-- Restock, Remove item -->
         <a href="#" class="btn btn-primary" > Sales Record </a> <!-- PAID ORDERS! Sales for each item (deduct based from order ID and quantity, ) -->
-        <a href="add_item.php" class="btn btn-primary" > Orders </a> <!-- Pending orders! -->
+        <a href="add_item.php" class="btn btn-primary" > Order </a> <!-- Pending orders! -->
         <!-- cancelled orders dont need to get list? ig -->
 
 

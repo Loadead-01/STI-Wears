@@ -1,11 +1,11 @@
 <?php
-     include "function/session_func.php";
-     require_once "connect.php";
+include "function/session_func.php";
+require_once "connect.php";
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,9 +32,9 @@
             ?>
 
             <section class="justify-content-center d-flex">
-                <div class="container-lg row p-2 m-0 d-flex justify-content-center mt-5 gx-4">
+                <div class="container-lg row p-2 m-0 d-flex justify-content-center mt-md-5 mt-3 gx-4">
                     <?php foreach ($departments as $department) { ?><!--  every row in department -->
-                        <div class="col-sm-6 row d-flex justify-content-center m-0 p-0">
+                        <div class="col-sm-6 row d-flex justify-content-center m-0 p-1">
                             <p class="color-yellow m-0 p-0 text-center border border-primary" style="height: 25px;"><?php echo htmlspecialchars($department['department_name']); ?></p>
 
                             <div class="row border d-flex justify-content-between px-5 py-3 color-white border h-100 ">
@@ -50,10 +50,10 @@
 
                                 <?php if (!empty($categories)) { ?>
                                     <?php foreach ($categories as $category) { ?>
-                                        <a  href="category.php?category_id=<?php echo urlencode($category['category_id']); ?>" class="col-md-5 border m-2 bg-light text-decoration-none text-dark">
+                                        <a href="category.php?category_id=<?php echo urlencode($category['category_id']); ?>" class="col-md-5 border m-2 bg-light text-decoration-none text-dark">
                                             <?php echo htmlspecialchars($category['category_name']) ?>
                                         </a>
-                                
+
                                     <?php } ?>
                                 <?php } else { ?>
                                     <p class="text-center">No categories found for this department.</p>
@@ -65,7 +65,8 @@
             </section>
             <hr class="m-4">
             <h4>New Item</h4>
-            <div class="d-flex flex-wrap col-12 border justify-content-center color-white p-5">
+            
+            <div class="d-flex flex-wrap col-12 border justify-content-center color-white py-5">
                 <?php
                 // SQL query to get product details along with their image paths from item_image
                 $sql3 = 'SELECT i.product_name, i.stock, i.price, i.product_id, im.image_path 
@@ -76,24 +77,25 @@
                 ?>
 
                 <?php foreach ($items as $item) { ?>
-                    <div class="card col-4 border m-2" style="min-width: 235px; min-height: 100px">
+                    <a href="item.php?id=<?php echo $item['product_id']; ?>" class="card col-2 border m-2" style="min-width: 235px; min-height: 100px; text-decoration: none; color: inherit;">
                         <div class="row m-0 p-0">
                             <div class="col-sm-6 p-0">
                                 <!-- Dynamically load the image from the database -->
                                 <img src="<?php echo htmlspecialchars($item['image_path'] ?? 'assets/default_image.png'); ?>" class="border border-success img-fluid" alt="Item Image">
                             </div>
-                            <div class="col-sm-6 d-flex align-items-center justify-content-center p-0 m-0">
+                            <div class="col-sm-6 d-flex align-items-center border justify-content-center p-0 m-0 shadow-sm">
                                 <div class="card-body px-2 p-0">
-                                    <h5 class="lh-1 fs-md-1"><?php echo htmlspecialchars($item['product_name']); ?></h5>
-                                    <hr>
-                                    <p class="lh-1 text-grey fs-6 p-0 m-0">Stock: <?php echo htmlspecialchars($item['stock']); ?></p>
-                                    <p class="fs-6 lh-1 text-grey p-0 m-0">PHP <?php echo htmlspecialchars($item['price']); ?></p>
-                                    <?php echo "<a class='btn btn-success' href='item.php?id=" . $item['product_id'] . "'>Buy now</a>"; ?>
+                                    <h6 class="lh-1 fs-md-1 my-2" style="vertical-align: middle;"><?php echo htmlspecialchars($item['product_name']); ?></h6>
+                                    <hr class="m-0">
+                                    <p class="lh-1 text-grey small p-0 my-2" style="">Stock: <?php echo htmlspecialchars($item['stock']); ?></p>
+                                    <p class="small lh-1 text-grey p-0 my-2">PHP <?php echo htmlspecialchars($item['price']); ?></p>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
+
                 <?php } ?>
+            </div>
             </div>
         </div>
     </section>

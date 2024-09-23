@@ -22,7 +22,7 @@ if ($item_id > 0) {
     $stmt->bind_param("i", $item_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows > 0) {
         $sizes = [];
         $image_path = ''; // Initialize image path variable
@@ -45,65 +45,55 @@ if ($item_id > 0) {
     exit;
 }
 
-
-// Handle form submission for placing order or adding to cart
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $size = $_POST['size'];
     $quantity = intval($_POST['quantity']);
     $price = floatval($_POST['price']);
     $total_price = $quantity * $price;
-    
-    if (!empty($size) && $quantity <= 5) {
 
-    if (isset($_POST['action']) && $_POST['action'] == 'add_to_cart') { //add to cart
-        // Add to cart functionality using user_account (conn)
-        $sql_cart = "INSERT INTO `user_account`.`cart` (account_id, item_id, size, quantity, price) VALUES (?, ?, ?, ?, ?)";
-        $stmt_cart = $conn->prepare($sql_cart);
-        if (!$stmt_cart) {
-            die('Prepare failed: ' . $conn->error);
-        }
-        $stmt_cart->bind_param('iisis', $account_id, $item_id, $size, $quantity, $price);
-        $stmt_cart->execute();
-        if ($stmt_cart->error) {
-            die('Execute failed: ' . $stmt_cart->error);
-        }
-        
-        
-    } else { //buy now
-        // Place order functionality using user_account (conn)
-        $sql_order = "INSERT INTO `user_account`.`order` (account_id, student_id, ordered_by, section, total_price, status) 
-                      VALUES (?, ?, ?, ?, ?, 'pending')";
-        $stmt_order = $conn->prepare($sql_order);
-        if (!$stmt_order) {
-            die('Prepare failed: ' . $conn->error);
-        }
-        $stmt_order->bind_param('iissd', $account_id, $student_id, $ordered_by, $section, $total_price);
-        $stmt_order->execute();
-        if ($stmt_order->error) {
-            die('Execute failed: ' . $stmt_order->error);
-        }
-        $order_id = $stmt_order->insert_id;
+    if (empty($size) || $quantity <= 0 || $quantity > 5) {
+        echo "<div class='alert alert-danger m-0'>Please check your order details. Make sure you choose a size and quantity is not higher than 5.</div>";
+    } else {
+        foreach ($sizes as $size_info) {
+            if ($size_info['size'] == $size) {
+                if ($size_info['stock'] < $quantity) {
+                    echo "<div class='alert alert-danger m-0'>Sorry, we don't have enough stock for Size $size. Only " . $size_info['stock'] . " left.</div>";
+                } else {
+                    if (isset($_POST['action'])) {
+                        if ($_POST['action'] == 'add_to_cart') { 
+                            // Add to cart functionality
+                            $sql_cart = "INSERT INTO `user_account`.`cart` (account_id, item_id, size, quantity, price) VALUES (?, ?, ?, ?, ?)";
+                            $stmt_cart = $conn->prepare($sql_cart);
+                            if (!$stmt_cart) {
+                                die('Prepare failed: ' . $conn->error);
+                            }
+                            $stmt_cart->bind_param('iisis', $account_id, $item_id, $size, $quantity, $price);
+                            $stmt_cart->execute();
+                            if ($stmt_cart->error) {
+                                die('Execute failed: ' . $stmt_cart->error);
+                            }
+                        } else if ($_POST['action'] == 'buy_now') { 
+                            // Buy now functionality
+                            $order_details = [
+                                'item_name' => $item_name,
+                                'size' => $size,
+                                'quantity' => $quantity,
+                                'price' => $price,
+                                'total_price' => $total_price
+                            ];
 
-        // Insert into order_detail table in user_account (conn)
-        $sql_detail = "INSERT INTO `user_account`.`order_detail` (order_id, size, quantity, price, product_name) 
-                       VALUES (?, ?, ?, ?, ?)";
-        $stmt_detail = $conn->prepare($sql_detail);
-        if (!$stmt_detail) {
-            die('Prepare failed: ' . $conn->error);
+                            // Store order details in session and redirect to checkout
+                            $_SESSION['checkout_data'] = $order_details;
+                            header("Location: checkout.php?item_id=" . urlencode($item_id));
+                            exit;
+                        }
+                    }
+                }
+                break;
+            }
         }
-        $stmt_detail->bind_param('isids', $order_id, $size, $quantity, $price, $item_name);
-        $stmt_detail->execute();
-        if ($stmt_detail->error) {
-            die('Execute failed: ' . $stmt_detail->error);
-        }
-
-        header("Location: order.php?order_id=$order_id");
-        exit;
-    } 
-} else {
-    echo "<div class='alert alert-danger m-0'> Please check your order details. Make sure you choose a size and quantity cant be higher than 5</div>";
+    }
 }
-} 
 
 ?>
 
@@ -118,29 +108,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <style>
         .size-btn.selected {
             background-color: #007bff;
-            /* Blue color */
             color: white;
         }
     </style>
-
-<link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-    crossorigin="anonymous" />
-
 </head>
 
-<body>
+<body class="bg-light">
     <?php include 'header.php'; ?>
-
-    <div class="container-xl mt-4">
+    <div class="p-3">
+    <div class="container-lg mt-4 p-3 bg-white border shadow-sm">
         <div class="row">
-            <div class="col-6">
+            <div class="col-sm-6">
                 <!-- Display the item image -->
-                <img src="<?php echo htmlspecialchars($image_path); ?>" alt="Product Image" class="img-fluid">
+                <img src="<?php echo htmlspecialchars($image_path); ?>" alt="Product Image" class="img-fluid border shadow-sm ">
             </div>
-            <div class="col-6">
+            <div class="col-sm-6 m-sm-0 mt-4">
                 <h1><?php echo htmlspecialchars($item_name); ?></h1>
 
                 <!-- Form for ordering or adding to cart -->
@@ -152,12 +134,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="mb-3">
                         <h5>Select Size:</h5>
                         <?php foreach ($sizes as $size): ?>
-                            <button type="button" class="btn btn-outline-primary m-1 size-btn"
-                                data-size="<?php echo htmlspecialchars($size['size']); ?>"
-                                data-price="<?php echo htmlspecialchars($size['price']); ?>"
-                                data-stock="<?php echo htmlspecialchars($size['stock']); ?>">
-                                <?php echo strtoupper(htmlspecialchars($size['size'])); ?>
-                            </button>
+                            <?php if ($size['stock'] > 0) { ?> <!-- Only display sizes with stock > 0 -->
+                                <button type="button" class="btn btn-outline-primary m-1 size-btn"
+                                    data-size="<?php echo htmlspecialchars($size['size']); ?>"
+                                    data-price="<?php echo htmlspecialchars($size['price']); ?>"
+                                    data-stock="<?php echo htmlspecialchars($size['stock']); ?>">
+                                    <?php echo strtoupper(htmlspecialchars($size['size'])); ?>
+                                </button>
+                            <?php } ?>
                         <?php endforeach; ?>
                     </div>
 
@@ -171,39 +155,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <input type="number" name="quantity" id="quantity" class="form-control" min="1" value="1" required>
                     </div>
 
-                    <button type="button" class="btn btn-primary" id="add-to-cart" data-bs-toggle="modal" data-bs-target="#exampleModal">Add to Cart</button>
-                    <button type="submit" class="btn btn-success" id="place-order">Order Now</button>
-
-                    <!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        ...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
-                    
+                    <button type="button" class="btn btn-primary" id="add-to-cart">Add to Cart</button>
+                    <button type="button" class="btn btn-success" id="place-order">Order Now</button>
                 </form>
             </div>
         </div>
     </div>
-
-
-
+    </div>
     <script>
-        document.getElementById('add-to-cart').addEventListener('submit', function(e) {
-            e.preventDefault();
-        });
         // Update price and stock when size buttons are clicked
         const sizeButtons = document.querySelectorAll('.size-btn');
         const priceDisplay = document.getElementById('price-display');
@@ -213,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         const actionInput = document.getElementById('action-input');
 
         sizeButtons.forEach(button => {
-            button.addEventListener('click', function () {
+            button.addEventListener('click', function() {
                 // Remove 'selected' class from all buttons
                 sizeButtons.forEach(btn => btn.classList.remove('selected'));
 
@@ -231,13 +190,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             });
         });
 
-        document.getElementById('add-to-cart').addEventListener('click', function () {
-            actionInput.value = 'add_to_cart';
+
+
+        // Update event listener for 'Order Now'
+        document.getElementById('place-order').addEventListener('click', function() {
+            actionInput.value = 'buy_now'; // Set action for 'Buy Now'
+            document.getElementById('order-form').submit();
+        });
+
+        // Update 'Add to Cart' listener
+        document.getElementById('add-to-cart').addEventListener('click', function() {
+            actionInput.value = 'add_to_cart'; // Set action for 'Add to Cart'
             document.getElementById('order-form').submit();
         });
     </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
 

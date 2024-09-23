@@ -2,15 +2,10 @@
 include 'function/admin_session_func.php' ;
 include 'connect.php';
 
-$sql = "SELECT * FROM `user_account`.`order`  WHERE `status` = 'pending'";
+$sql = "SELECT * FROM `user_account`.`order`  WHERE `status` = 'pending' ORDER BY `order_id` DESC ";
 $result = $conn->query($sql);
 
-if  ($result->num_rows > 0) {
-    // output data of each row
-    while($row = $result->fetch_assoc()) {
-        echo "Order Number : " . $row['order_id'];
-    }
-}
+
 ?>
 
 
@@ -27,7 +22,7 @@ if  ($result->num_rows > 0) {
         crossorigin="anonymous" />
 </head>
 <body>
-    <?php include 'admin_header.php'  ?>
+    <?php include 'admin_header.php';  ?>
     
     <div class="container">
     <table class="table">
@@ -42,20 +37,30 @@ if  ($result->num_rows > 0) {
         </tr>
         
             <?php 
+
+            $break = 0;
             while ($row = $result->fetch_assoc()){
+                $break++;
                 echo "<tr>";
                 echo "<td>" . $row["order_id"] . "</td>";
-                echo "<td>" . $row["student_name"] . "</td>";
+                echo "<td>" . $row["ordered_by"] . "</td>";
                 echo "<td>" . $row["student_id"] . "</td>";
                 echo "<td>" . $row["status"] . "</td>";
                 echo "<td>" . $row["total_price"] . "</td>";
-                echo "<td>" . "gcass". "</td>";
-                echo "<td><a href='order_details.php?prder_id=" . $row["order_id"] . "'>View Details</a></td>";
+                echo "<td>" . $row["payment_method"]. "</td>";
+                echo "<td><a class='btn btn-success' href='order_details.php?order_id=" . $row["order_id"] . "'>View Details</a></td>";
                 echo "</tr>";
+              
+                if ($break >= 5) {
+                    break;
+                }
             }  
+        
             ?>
         
     </table>
+    <a class='btn btn-success' href='order_management.php'> View More Orders </a>
+
 </div>
 
 

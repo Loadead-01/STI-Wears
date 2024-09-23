@@ -11,8 +11,10 @@
             session_start();
             $_SESSION["account_id"] = $user["account_id"];
             $_SESSION["student_id"] = $user["student_id"];
+            $_SESSION["student_email"] = $user["student_email"];
             $_SESSION["user"] = $user["full_name"];
             $_SESSION["section"] = $user["section"];
+
             header("Location: dashboard.php");
 
             die();

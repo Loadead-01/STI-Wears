@@ -7,6 +7,7 @@ $account_id = $_SESSION['account_id'];
 
 // Get the order ID from the query string
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
+unset($_SESSION['checkout_data']);
 
 if ($order_id > 0) {
     // Query to get order details, ensuring it belongs to the logged-in user
@@ -40,8 +41,6 @@ if ($order_id > 0) {
     echo "Invalid order ID.";
     exit;
 }
-print_r($order);
-print_r($_SESSION);
 
 ?>
 
@@ -90,6 +89,9 @@ print_r($_SESSION);
         </tbody>
     </table>
 </div>
-
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
 </body>
 </html>
