@@ -59,8 +59,8 @@ if (isset($_POST["submit"])) {
     // Validate section
     if (empty($section)) {
         $errors['section'] = "Section is required";
-    } elseif (!preg_match('/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9 ]{1,12}$/', $section)) {
-        $errors['section'] = "Section must be between 1 and 12 characters, and must contain at least one letter and one number. Only letters, numbers, and spaces are allowed.";
+    } elseif (!preg_match('/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9 ]{6,12}$/', $section)) {
+        $errors['section'] = "Double check your section, must include letters and numbers";
     }
 
     // Validate full name
@@ -117,6 +117,9 @@ if (isset($_POST["submit"])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
     <style>
         .text-danger {
@@ -147,17 +150,26 @@ if (isset($_POST["submit"])) {
             user-select: none;
             /* Prevents text selection on click */
         }
+
+        body {
+            font-family: 'poppins', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+      width: 0;
+    }
     </style>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-sm" style="background-color: #2198f4; color: #F0F0F0; font-weight: bold;">
         <div class="container-xxl align-items-center">
-            <a id="logo" class="navbar-brand mx-4 border text-dark bg-light" href="index.php">STI Wears</a>
+            <a id="logo" class="navbar-brand mx-4 px-2" style="background-color: #FFE10F !important; color: #0040b0 !important; font-weight: bold !important;" href="index.php">STI Wears</a>
+
         </div>
     </nav>
 
-    <div class="container mt-5">
+    <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
             <form action="signup.php" method="POST" class="col-11 col-md-7 border p-md-5 p-3 bg-light-subtle shadow form">
                 <label class="form-label">Student ID (02000363495)</label>
@@ -199,6 +211,8 @@ if (isset($_POST["submit"])) {
             </form>
         </div>
     </div>
+
+    <?php include 'footer.php' ?>
 
     <script>
         function togglePassword(inputId) {

@@ -54,7 +54,7 @@ $total_items = 0;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body class="bg-light">
+<body class="bg-light ">
     <?php include 'header.php' ?>
 
     <div class="container col-sm-9 mt-4">
@@ -75,7 +75,7 @@ $total_items = 0;
                         </thead>
                         <tbody>
                             <?php while ($row = $result_cart->fetch_assoc()): ?>
-                                <?php  $total_items++?>
+                                <?php $total_items++ ?>
                                 <tr class="border m-1 p-1">
                                     <td style="vertical-align: middle;">
                                         <img src="<?php echo $row['image_path']; ?>" alt="<?php echo $row['product_name']; ?>" width="50" height="50" class="img-fluid">
@@ -100,7 +100,7 @@ $total_items = 0;
 
 
                 <div class="container border p-2 bg-white shadow-sm d-flex justify-content-between align-items-center">
-                    <p class="m-0">Total Items :  <?php echo $total_items; ?></p>
+                    <p class="m-0 fs-6 small-sm">Total Items : <?php echo $total_items; ?></p>
 
                     <div class="d-flex justify-content-end align-items-center">
                         <p class=" m-0 ">Total Price : PHP <?php echo $total_price ?></p>
@@ -115,6 +115,7 @@ $total_items = 0;
                 <p>Your cart is empty.</p>
             <?php endif; ?>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 </body>

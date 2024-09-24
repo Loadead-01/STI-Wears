@@ -165,6 +165,22 @@ if (empty($cart_items)) {
         #btn {
             cursor: pointer;
         }
+
+        /* Add a custom focus effect to the labels */
+        .btn-check:focus+.btn {
+            box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.5);
+            /* For Cashier (Warning Button) */
+        }
+
+        #payment_method_cashier:focus+.btn-warning {
+            box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.5);
+            /* Orange focus ring */
+        }
+
+        #payment_method_gcash:focus+.btn-primary {
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.5);
+            /* Blue focus ring */
+        }
     </style>
     <script>
         function toggleGcashReceipt() {
@@ -184,14 +200,14 @@ if (empty($cart_items)) {
     <div class="container-md mt-4 p-0">
         <h2>Check Out</h2>
         <h6 class="border shadow-sm p-2 m-0 rounded-top-3" style="background-color: #2198f4 !important;  color: #F0F0F0 !important;">Student Info</h5>
-        <div class="col-12 bg-white align-items-center p-2 border shadow-sm">
+            <div class="col-12 bg-white align-items-center p-2 border shadow-sm">
 
 
-            <p class="m-0">Name: <?php echo htmlspecialchars($_SESSION["user"]) ?></p>
-            <p class="m-0">Student ID: <?php echo htmlspecialchars($_SESSION["student_id"]) ?></p>
-            <p class="m-0">Section: <?php echo htmlspecialchars($_SESSION["section"]) ?></p>
-            <p class="m-0">Student Email: <?php echo htmlspecialchars($_SESSION["student_email"]) ?></p>
-        </div>
+                <p class="m-0">Name: <?php echo htmlspecialchars($_SESSION["user"]) ?></p>
+                <p class="m-0">Student ID: <?php echo htmlspecialchars($_SESSION["student_id"]) ?></p>
+                <p class="m-0">Section: <?php echo htmlspecialchars($_SESSION["section"]) ?></p>
+                <p class="m-0">Student Email: <?php echo htmlspecialchars($_SESSION["student_email"]) ?></p>
+            </div>
     </div>
 
     <div class="container-md mt-3">
@@ -231,19 +247,23 @@ if (empty($cart_items)) {
                 <div class=" p-0 border shadow-sm">
 
                     <form action="checkout.php<?php echo $item_id ? '?item_id=' . $item_id : ''; ?>" method="POST" enctype="multipart/form-data">
-                        <div class="bg-white border shadow-sm p-2 py-4  d-flex d-md-flex">
-                            <h6 class="me-2">Payment Option : </h6>
-                            <input type="radio" class="btn-check" name="payment_method" id="payment_method_cashier" value="cashier" autocomplete="off" onclick="toggleGcashReceipt()" required>
-                            <label class="btn btn-warning" for="payment_method_cashier">Cashier</label>
+                        <div class="bg-white border shadow-sm p-2 py-4 d-flex">
+                            <h6 class="me-2">Payment Option:</h6>
 
+                            <!-- Cashier Option -->
+                            <input type="radio" class="btn-check me-2" name="payment_method" id="payment_method_cashier" value="cashier" autocomplete="off" onclick="toggleGcashReceipt()" required>
+                            <label class="btn btn-warning  me-2" for="payment_method_cashier">Cashier</label>
+
+                            <!-- GCash Option -->
                             <input type="radio" class="btn-check" name="payment_method" id="payment_method_gcash" value="gcash" autocomplete="off" onclick="toggleGcashReceipt()" required>
                             <label class="btn btn-primary" for="payment_method_gcash">GCash</label>
                         </div>
+
                         <div id="gcash_receipt_field" style="display:none;" class="mt-2">
-                            
-                                <label class="border bg-light shadow-sm p-2 my-2 d-flex justify-content-center" for="gcash_receipt" id="btn">Upload GCash Receipt</label>
-                                <input type="file" name="gcash_receipt" id="gcash_receipt" class="d-none">
-                            
+
+                            <label class="border bg-light shadow-sm p-2 my-2 d-flex justify-content-center" for="gcash_receipt" id="btn">Upload GCash Receipt</label>
+                            <input type="file" name="gcash_receipt" id="gcash_receipt" class="d-none">
+
                             <!-- Button trigger modal -->
                             <button type="button" class="small bg-light shadow-0 border-0 text-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                                 Pay using gcash guide
@@ -298,6 +318,8 @@ if (empty($cart_items)) {
             </div>
         </div>
     </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 </body>

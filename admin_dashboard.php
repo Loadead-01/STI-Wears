@@ -25,7 +25,8 @@ $result = $conn->query($sql);
     <?php include 'admin_header.php';  ?>
     
     <div class="container">
-    <table class="table">
+    <div class="table-responsive">
+    <table class="table table-striped shadow-sm table-white table-hover border">
         <tr>
             <th>Order Number</th>
             <th>Buyer Name</th>
@@ -59,10 +60,11 @@ $result = $conn->query($sql);
             ?>
         
     </table>
-    <a class='btn btn-success' href='order_management.php'> View More Orders </a>
 
 </div>
+<a class='btn btn-success' href='order_management.php'> View More Orders </a>
 
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"

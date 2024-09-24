@@ -21,8 +21,8 @@ require_once "connect.php";
 <body class="bg-light justify-content-center">
     <?php include 'header.php'; ?>
 
-    <section id="new-item" class="border border-danger justify-content-center d-flex">
-        <div class="container-lg row p-2 m-0 d-flex justify-content-center mt-5 gx-4">
+    <section id="new-item" class=" justify-content-center d-flex">
+        <div class="container-lg row p-2 m-0 d-flex justify-content-center mt-3 gx-4">
 
             <?php
             // Fetch all departments
@@ -34,7 +34,7 @@ require_once "connect.php";
             <section class="justify-content-center d-flex">
                 <div class="container-lg row p-2 m-0 d-flex justify-content-center mt-md-5 mt-3 gx-4">
                     <?php foreach ($departments as $department) { ?><!--  every row in department -->
-                        <div class="col-sm-6 row d-flex justify-content-center m-0 p-1">
+                        <div class="col-sm-6 row d-flex justify-content-center m-0 p-1 shadow-sm">
                             <p class="color-yellow m-0 p-0 text-center border border-primary" style="height: 25px;"><?php echo htmlspecialchars($department['department_name']); ?></p>
 
                             <div class="row border d-flex justify-content-between px-5 py-3 color-white border h-100 ">
@@ -99,6 +99,8 @@ require_once "connect.php";
             </div>
         </div>
     </section>
+
+   
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"

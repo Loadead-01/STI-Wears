@@ -57,10 +57,22 @@ if(isset($_POST["login"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'poppins', sans-serif;
+      }
+    </style>
 </head>
-<body>
+<body class="bg-light">
+<nav class="navbar navbar-expand-sm" > 
+        <div class="container-xxl align-items-center">
+            <a id="logo" class="navbar-brand mx-4 border px-2" style="background-color: #FFE10F !important; color: #0040b0 !important; font-weight: bold !important;" href="index.php">STI Wears</a>
+        </div>
+    </nav>
 
-<div class="container mt-5">
+<div class="container col-7 mt-5 border bg-white shadow-sm">
+    <div class="p-4">
     <h1>Admin Login</h1>
     
     <form method="POST">
@@ -74,7 +86,9 @@ if(isset($_POST["login"])) {
         </div>
         <input type="submit" value="login" name="login" class="btn btn-primary">
     </form>
+    </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 </body>
 </html>

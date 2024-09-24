@@ -162,6 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </div>
     </div>
+  
+
     <script>
         // Update price and stock when size buttons are clicked
         const sizeButtons = document.querySelectorAll('.size-btn');

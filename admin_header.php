@@ -1,3 +1,14 @@
+<head>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'poppins', sans-serif;
+      }
+    </style>
+  </head>
+
 <nav class="navbar navbar-expand-sm color-blue sticky-top col-12" style=" background-color: #2198f4 !important;  color: #F0F0F0 !important; font-weight: bold !important; ">
         <div class="container-xxl align-items-center ">
             <a id="logo" class="navbar-brand mx-4 border text-dark bg-light" href="index.php">STI Wears</a>
@@ -25,7 +36,7 @@
         <a href="add_item.php" class="btn btn-primary" > Add new item </a> 
         <a href="stock_management.php" class="btn btn-primary" > Stock Management </a> <!-- Restock, Remove item -->
         <a href="#" class="btn btn-primary" > Sales Record </a> <!-- PAID ORDERS! Sales for each item (deduct based from order ID and quantity, ) -->
-        <a href="add_item.php" class="btn btn-primary" > Order </a> <!-- Pending orders! -->
+        <a href="order_record.php" class="btn btn-primary" > Order </a> <!-- Pending orders! -->
         <!-- cancelled orders dont need to get list? ig -->
 
 

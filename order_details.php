@@ -4,10 +4,12 @@ include 'connect.php';
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
 
 // Fetch order details
-$sql_order = "SELECT o.total_price, o.ordered_by, o.ordered_date, o.status, o.student_id, d.size, d.quantity, d.price, i.product_name, i.product_id
+$sql_order = "SELECT o.total_price, o.ordered_by, o.ordered_date, im.image_path, o.payment_method, o.status, o.student_id, d.size, d.quantity, d.price, i.product_name, i.product_id
 FROM `user_account`.`order` o
 JOIN `user_account`.`order_detail` d ON o.order_id = d.order_id
 JOIN `admin_account`.`item` i ON d.product_name = i.product_name
+JOIN `admin_account`.`item_image` im ON i.product_id = im.item_id
+
 WHERE o.order_id = ?";
 
 $stmt_order = $conn2->prepare($sql_order);
@@ -45,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             $stmt_status->bind_param("si", $status, $order_id);
             if ($stmt_status->execute()) {
                 echo "Order status updated to Paid.<br>";
+                header("Location: #");
             } else {
                 echo "Error updating status: " . $stmt_status->error;
             }
@@ -108,17 +111,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <title>STI Wears</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
     <?php include 'admin_header.php' ?>
 
-    <h3>Order number: <?php echo $order_id; ?></h3>
-    <h3>Order By: <?php echo $order['ordered_by']; ?></h3>
-    <h3>Total Price: <?php echo $order['total_price']; ?></h3>
-    <h3>Order Status: <?php echo $order['status']; ?></h3>
-    <h3>Order Date: <?php echo $order_date; ?></h3>
-    
-    <div class="container">
-        <table class="table">
+    <div class="container-lg mt-4 d-flex justify-content-center col-10">
+        <div class="row d-flex justify-content-center col-12">
+            <div class="col-sm-6  bg-white border shadow-sm p-0">
+
+                <h5 style="text-align: center; vertical-align: center;" class="p-2 m-0 border">Order Number</h5>
+                <p class="d-flex justify-content-center m-0 align-items-center p-3 fs-1" style="vertical-align: middle;"> <?php echo $order_id ?> </p>
+
+            </div>
+            <div class="col-sm-6 bg-white white border shadow-sm p-0 mt-3 mt-sm-0 ">
+                <h5 style="text-align: center; vertical-align: center;" class="p-2 m-0 border">Order Details</h5>
+                <div class="p-2">
+                    <p class="m-0"><strong>Total Price: </strong><?php echo number_format($order['total_price'], 2); ?></p>
+                    <p class="m-0"><strong>Order Status: </strong><?php echo htmlspecialchars($order['status'], 2); ?></p>
+                    <p class="m-0"><strong>Payment Method: </strong><?php echo htmlspecialchars($order['payment_method'], 2); ?></p>
+
+                    <p class="m-0"><strong>Ordered By: </strong> <?php echo htmlspecialchars($order['ordered_by']); ?></p>
+                    <p class="m-0"><strong>Student ID : </strong> <?php echo htmlspecialchars($order['student_id']); ?> </p>
+                    <p class="m-0"><strong>Ordered Date: </strong> <?php echo htmlspecialchars($order_date); ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php
+    if ($order['status'] == "pending") {
+        if ($order["payment_method"]  == "cashier") {
+            echo '<p class="small m-3 text-black-50" style="text-align: center;">Double check customers payment and information before clicking paid button</p>';
+        } elseif ($order['payment_method'] == "gcash") {
+            echo '<p class="small m-3 text-black-50" style="text-align: center;">Double check customers payment and information before clicking paid button</p>';
+
+        }
+    } elseif ($order['status'] == "cancelled") {
+        echo '<p class="small m-3 text-black-50" style="text-align: center;">Order automatically cancelled after a day of unsuccessfull payment</p>';
+    } else {
+        echo '<p class="small m-3 text-black-50" style="text-align: center;">Order Paid, Print and give the order receipt  to the customer</p>';
+
+
+
+    }
+    ?>
+
+    <div class="container  ">
+    <div class="container mt-4 m-0">
+        <table class="table border shadow-sm col-5">
             <thead>
                 <tr>
                     <th>Product Name</th>
@@ -130,24 +169,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             <tbody>
                 <?php foreach ($order_items as $item): ?>
                     <tr>
-                        <td><?php echo $item['product_name']; ?></td>
-                        <td><?php echo $item['size']; ?></td>
-                        <td><?php echo $item['quantity']; ?></td>
-                        <td><?php echo $item['price']; ?></td>
+                        <td style="vertical-align: middle;">
+                            <img src="<?php echo $item['image_path']; ?>" alt="<?php echo $row['product_name']; ?>" width="50" height="50" class="img-fluid">
+                            <?php echo htmlspecialchars($item['product_name']); ?>
+                        </td>
+                        <td style="vertical-align: middle;"><?php echo htmlspecialchars($item['size']); ?></td>
+                        <td style="vertical-align: middle;"><?php echo htmlspecialchars($item['quantity']); ?></td>
+                        <td style="vertical-align: middle;">PHP <?php echo number_format($item['price'], 2); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
+    
 
-    <form action="" method="POST">
+    <form action="" method="POST" class=" d-flex justify-content-end mx-3">
         <?php if ($order['status'] !== 'paid'): ?>
             <input type="submit" name="status" value="paid" class="btn btn-success">
         <?php else: ?>
-            <p class="text-danger">Order has already been marked as paid.</p>
+            <p class="text-danger m-0 " style="vertical-align: middle;">Order has already been marked as paid.</p>
         <?php endif; ?>
     </form>
-
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
