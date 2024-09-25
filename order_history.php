@@ -27,9 +27,9 @@ $result = mysqli_query($conn, $sql);
     <h5 class="bg-white border shadow-sm p-3">Order History</h5>
     <div class="container-lg d-flex justify-content-center p-0">
 
-        <div class="col-12 border bg-white d-flex justify-content-center ">
-        <div class="table-responsive m-0 p-0">
-            <table class="table table-dark table-striped">
+        <div class="col-12 border bg-white d-flex p-0 justify-content-center ">
+        <div class="table-responsive m-0 p-0 col-12">
+            <table class="table table-dark table-striped p-0">
                 <tr>
                     <th class="" style="vertical-align: middle;">Order Number</th>
                     <th class=""  style="vertical-align: middle;">Status</th>
