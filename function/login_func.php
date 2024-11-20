@@ -19,10 +19,10 @@
 
             die();
           } else {
-            echo "<div class='alert alert-danger'>Password doesn't match </div>";
+            echo "<div class='alert alert-danger m-0'>Password doesn't match </div>";
           }
         } else {
-          echo "<div class='alert alert-danger'>Can't find user account </div>";
+          echo "<div class='alert alert-danger m-0'>Can't find user account </div>";
         }
       }
 ?>

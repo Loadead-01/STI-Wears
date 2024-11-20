@@ -32,20 +32,15 @@ if(isset($_POST["login"])) {
             header("Location: admin_dashboard.php");
             die();
         } else {
-            echo "<div class='alert alert-danger'>Username or Passsword doesn't match";
+            echo "<div class='alert alert-danger m-0'>Username or Password doesn't match</div>";
         }
 
     } else {
-        echo "<div class='alert alert-danger'>Username or Passsword doesn't match";
+        echo "<div class='alert alert-danger m-0'>Username or Password doesn't match</div>";
     }
 
 
 }
-
-
-
-
-
 
 
 ?>
@@ -65,16 +60,15 @@ if(isset($_POST["login"])) {
     </style>
 </head>
 <body class="bg-light">
-<nav class="navbar navbar-expand-sm" > 
+<nav class="navbar navbar-expand-sm bg-white border-bottom mt-0" > 
         <div class="container-xxl align-items-center">
             <a id="logo" class="navbar-brand mx-4 border px-2" style="background-color: #FFE10F !important; color: #0040b0 !important; font-weight: bold !important;" href="index.php">STI Wears</a>
         </div>
     </nav>
-
-<div class="container col-7 mt-5 border bg-white shadow-sm">
+<div class="container-sm col-6 mt-4">
+<h3 class="text-start">Admin Login</h3>
+<div class="mt-2 border bg-white shadow-sm">
     <div class="p-4">
-    <h1>Admin Login</h1>
-    
     <form method="POST">
         <div class="mb-3">
             <label for="username" class="form-label">Username</label>
@@ -84,8 +78,12 @@ if(isset($_POST["login"])) {
             <label for="password" class="form-label">Password</label>
             <input type="password" class="form-control" id="password" name="password" required>
         </div>
+        <div class="text-end">
         <input type="submit" value="login" name="login" class="btn btn-primary">
+        </div>
     </form>
+
+    </div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

@@ -11,12 +11,11 @@ unset($_SESSION['checkout_data']);
 
 if ($order_id > 0) {
     // Query to get order details, ensuring it belongs to the logged-in user
-    $sql_order = "SELECT o.total_price, o.ordered_by, o.ordered_date, o.payment_method, o.status, im.image_path, o.student_id, d.size, d.quantity, d.price, i.product_name
+    $sql_order = "SELECT o.total_price, o.ordered_by, o.ordered_date, o.payment_method, o.status, im.image_path, o.date_display, o.student_id, d.size, d.quantity, d.price, i.product_name
                   FROM `user_account`.`order` o
                   JOIN `user_account`.`order_detail` d ON o.order_id = d.order_id
                   JOIN item i ON d.product_name = i.product_name
-             JOIN admin_account.item_image im ON i.product_id = im.item_id
-
+                  JOIN admin_account.item_image im ON i.product_id = im.item_id
                   WHERE o.order_id = ? AND o.account_id = ?";
 
     $stmt_order = $conn2->prepare($sql_order);
@@ -38,7 +37,7 @@ if ($order_id > 0) {
         // Format order date (assuming it's stored as DATETIME)
         $order_date = date('F j, Y, g:i a', strtotime($order['ordered_date']));
     } else {
-        echo "Order not found or you do not have permission to view this order.";
+        header("Location: order_error.php");
         exit;
     }
 } else {
@@ -46,18 +45,17 @@ if ($order_id > 0) {
     exit;
 }
 
-// Get the current timestamp
-$current_timestamp = time();
 
-// Calculate the timestamp for 24 hours ago
-$cancel_timestamp = $current_timestamp - 86400; // 86400 is the number of seconds in 24 hours
-
-// Query to get orders that are more than 24 hours old
-$sql_cancel_orders = "SELECT order_id FROM `user_account`.`order` WHERE ordered_date < FROM_UNIXTIME(?) AND status = 'pending' AND payment_method = 'cashier'";
+$sql_cancel_orders = "SELECT order_id 
+                      FROM `user_account`.`order` 
+                      WHERE ordered_date < (CURRENT_TIMESTAMP - INTERVAL 24 HOUR) 
+                      AND status = 'pending' 
+                      AND payment_method = 'cashier'";
 $stmt_cancel_orders = $conn2->prepare($sql_cancel_orders);
-$stmt_cancel_orders->bind_param('i', $cancel_timestamp);
 $stmt_cancel_orders->execute();
 $result_cancel_orders = $stmt_cancel_orders->get_result();
+
+
 
 // Update the order status to "cancelled" for orders that are more than 24 hours old
 while ($row = $result_cancel_orders->fetch_assoc()) {
@@ -68,6 +66,19 @@ while ($row = $result_cancel_orders->fetch_assoc()) {
     $stmt_update_status->execute();
 }
 
+
+$display_time = date('F j, Y, g:i a', strtotime($order['ordered_date']));
+
+if ($order["date_display"] == null) {
+    $sql_display_time = "UPDATE `user_account`.`order` SET date_display = ? WHERE order_id = ?";
+    $stmt_display = $conn2->prepare($sql_display_time);
+    $stmt_display->bind_param('si', $display_time, $order_id);
+    $stmt_display->execute();
+    header("Location: #");
+}
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -77,6 +88,7 @@ while ($row = $result_cancel_orders->fetch_assoc()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -84,16 +96,17 @@ while ($row = $result_cancel_orders->fetch_assoc()) {
     <?php include 'header.php'; ?>
 
 
-    <div class="container-lg mt-4 d-flex justify-content-center col-10">
+    <div class="container-lg mt-4 d-flex justify-content-center">
         <div class="row d-flex justify-content-center col-12">
             <div class="col-sm-6  bg-white border shadow-sm p-0">
 
-                <h5 style="text-align: center; vertical-align: center;" class="p-2 m-0 border">Order Number</h5>
-                <p class="d-flex justify-content-center m-0 align-items-center p-3 fs-1" style="vertical-align: middle;"> <?php echo $order_id ?> </p>
+                <h6 style="text-align: center; vertical-align: center; background-color: #FFE10F !important;" class="p-2 m-0 border fw-bold">Order Number</h6>
+                <h1 class="d-flex justify-content-center m-5 align-items-center " style="vertical-align: middle;"> <?php echo $order_id ?> </h1>
 
             </div>
             <div class="col-sm-6 bg-white white border shadow-sm p-0 mt-3 mt-sm-0 ">
-                <h5 style="text-align: center; vertical-align: center;" class="p-2 m-0 border">Order Details</h5>
+            <h6 style="text-align: center; vertical-align: center; background-color: #FFE10F !important;" class="p-2 m-0 border fw-bold">Order Details</h6>
+
                 <div class="p-2">
                     <p class="m-0"><strong>Total Price: </strong><?php echo number_format($order['total_price'], 2); ?></p>
                     <p class="m-0"><strong>Order Status: </strong><?php echo htmlspecialchars($order['status'], 2); ?></p>
@@ -101,7 +114,7 @@ while ($row = $result_cancel_orders->fetch_assoc()) {
 
                     <p class="m-0"><strong>Ordered By: </strong> <?php echo htmlspecialchars($order['ordered_by']); ?></p>
                     <p class="m-0"><strong>Student ID : </strong> <?php echo htmlspecialchars($order['student_id']); ?> </p>
-                    <p class="m-0"><strong>Ordered Date: </strong> <?php echo htmlspecialchars($order_date); ?></p>
+                    <p class="m-0"><strong>Ordered Date: </strong> <?php echo htmlspecialchars($order['date_display']); ?></p>
                 </div>
             </div>
         </div>
@@ -117,18 +130,21 @@ while ($row = $result_cancel_orders->fetch_assoc()) {
         echo '<p class="small m-3 text-black-50" style="text-align: center;">Order automatically cancelled after a day of unsuccessfull payment</p>';
     } else {
         echo '<p class="small m-3 text-black-50" style="text-align: center;">Order Paid, Make sure to claim your item at the proware</p>';
-
-
     }
     ?>
 
+    <div class="modal fade" id="receipt" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
 
+                <div class="modal-body">
+                    <img src="<?php echo $order['gcash_receipt'] ?>" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
 
-
-
-
-
-    <div class="container">
+    <div class="container-lg">
         <table class="table border shadow-sm col-5">
             <thead>
                 <tr>
@@ -152,6 +168,16 @@ while ($row = $result_cancel_orders->fetch_assoc()) {
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <?php
+        if ($order['payment_method'] == "gcash") {
+            echo '
+            <div class="text-end">
+            <button type="button" class="btn btn-primary me-3" data-bs-toggle="modal" data-bs-target="#receipt">
+                                            Gcash Receipt
+                                        </button>
+            </div>';
+        }
+        ?>
     </div>
 
 

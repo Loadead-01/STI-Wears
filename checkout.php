@@ -2,23 +2,24 @@
 include 'function/session_func.php';
 require_once 'connect.php';
 if (isset($_SESSION['order_complete']) && $_SESSION['order_complete'] === true) {
-    unset($_SESSION['order_complete']); // Clear the session variable
+    unset($_SESSION['order_complete']);
     header("Location: dashboard.php");
     exit();
 }
-//retrive yung data from session
+
+echo "test";
+
 $account_id = $_SESSION['account_id'];
 $student_id = $_SESSION['student_id'];
 $ordered_by = $_SESSION['user'];
 $section = $_SESSION['section'];
 
-//retrive order_id from form
+
 $item_id = isset($_GET['item_id']) ? intval($_GET['item_id']) : null;
+$checkout_data = $_SESSION['checkout_data'] ?? null;
 $total_price = 0;
 
-// Check if the user is buying a single item (Buy Now)
 if ($item_id) {
-    // Fetch the specific item for Buy Now
     $sql_bn = "SELECT i.product_name, d.size, d.price, im.image_path
                FROM `admin_account`.`item` i
                JOIN `admin_account`.`item_details` d ON i.product_id = d.item_id
@@ -31,12 +32,12 @@ if ($item_id) {
 
     $item_details = $result_bn->fetch_assoc();
 
-    $size = $_SESSION['checkout_data']['size'] ?? $item_details['size'];
-    $quantity = $_SESSION['checkout_data']['quantity'] ?? 1;
+    $size = $_SESSION['checkout_data']['size'] ?? $checkout_data['size'];
+    $quantity = $_SESSION['checkout_data']['quantity'] ?? $_;
     $price = $item_details['price'];
     $total_price = $price * $quantity;
     $image_path = $item_details['image_path'];
-
+    
     $cart_items = [
         [
             'product_name' => $item_details['product_name'],
@@ -48,7 +49,7 @@ if ($item_id) {
         ]
     ];
 } else {
-    // Fetch cart items (Cart Checkout)
+    // Fetch cart
     $sql_cart = "SELECT c.id, i.product_name, c.size, c.quantity, c.price, (c.quantity * c.price) AS total_price, im.image_path
                  FROM `user_account`.`cart` c
                  JOIN `admin_account`.`item` i ON c.item_id = i.product_id
@@ -68,8 +69,8 @@ if ($item_id) {
 
 // After handling the form submission for checkout
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
-    $payment_method = $_POST['payment_method']; // Ensure payment_method is captured
-    $gcash_receipt_path = null; // Initialize variable to avoid undefined variable error
+    $payment_method = $_POST['payment_method'];
+    $gcash_receipt_path = null;
 
     if ($payment_method === 'gcash' && empty($_FILES['gcash_receipt']['name'])) {
         echo "<div class='alert alert-danger'>Error: You must upload a GCash receipt.</div>";
@@ -85,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 
             // Validate file type
             if (!in_array($imageFileType, $allowedTypes)) {
-                echo "<div class='alert alert-danger'>Error: Only image files (JPG, JPEG, PNG, GIF) are allowed.</div>";
+                header("Location: error/gcash_error.php");
                 exit;
             }
 
@@ -93,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 
             // Validate file size
             if ($gcash_receipt["size"] > $maxFileSize) {
-                echo "<div class='alert alert-danger'>Error: File size exceeds the maximum limit of 10MB.</div>";
+                header("Location: error/gcash_error.php");
                 exit;
             }
 
@@ -101,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
                 // Save the file path to the variable to insert it into the database
                 $gcash_receipt_path = $target_file;
             } else {
-                echo "Failed to upload GCash receipt.";
+                header("Location: error/gcash_error.php");
                 exit;
             }
         }
@@ -116,7 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
                 // Store the order ID
                 $order_id = $stmt_order->insert_id; // Get the new order ID
 
-                // Insert order details
                 foreach ($cart_items as $item) {
                     $sql_order_detail = "INSERT INTO order_detail (order_id, size, quantity, price, product_name) 
                                          VALUES (?, ?, ?, ?, ?)";
@@ -126,8 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
                     }
                 }
                 $_SESSION['order_complete'] = true;
+
                 $cart_items = [];
-                // If coming from cart, clear the cart after successful checkout
                 if (!$item_id) {
                     $clear_cart_sql = "DELETE FROM `user_account`.`cart` WHERE account_id = ?";
                     $stmt_clear_cart = $conn2->prepare($clear_cart_sql);
@@ -135,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
                     $stmt_clear_cart->execute();
                 }
 
+                //remove data after succesful order
                 unset($_SESSION['checkout_data']);
                 $cart_items = [];
                 header("Location: order.php?order_id=" . $order_id);
@@ -197,128 +198,129 @@ if (empty($cart_items)) {
 
 <body class="bg-light">
     <?php include 'header.php' ?>
-    <div class="container-md mt-4 p-0">
-        <h2>Check Out</h2>
-        <h6 class="border shadow-sm p-2 m-0 rounded-top-3" style="background-color: #2198f4 !important;  color: #F0F0F0 !important;">Student Info</h5>
-            <div class="col-12 bg-white align-items-center p-2 border shadow-sm">
+    <div class="p-3">
+        <div class="container-md mt-4 p-0">
+            <h2>Check Out</h2>
+            <h6 class="border shadow-sm p-2 m-0 rounded-top-3 fw-bold text-center" style="background-color: #FFE10F  !important;  color: #333 !important;">Student Info</h5>
+                <div class="col-12 bg-white align-items-center p-2 border shadow-sm">
 
 
-                <p class="m-0">Name: <?php echo htmlspecialchars($_SESSION["user"]) ?></p>
-                <p class="m-0">Student ID: <?php echo htmlspecialchars($_SESSION["student_id"]) ?></p>
-                <p class="m-0">Section: <?php echo htmlspecialchars($_SESSION["section"]) ?></p>
-                <p class="m-0">Student Email: <?php echo htmlspecialchars($_SESSION["student_email"]) ?></p>
-            </div>
-    </div>
+                    <p class="m-0">Name: <?php echo htmlspecialchars($_SESSION["user"]) ?></p>
+                    <p class="m-0">Student ID: <?php echo htmlspecialchars($_SESSION["student_id"]) ?></p>
+                    <p class="m-0">Section: <?php echo htmlspecialchars($_SESSION["section"]) ?></p>
+                    <p class="m-0">Student Email: <?php echo htmlspecialchars($_SESSION["student_email"]) ?></p>
+                </div>
+        </div>
 
-    <div class="container-md mt-3">
-        <div class="row align-items-start justify-content-between">
+        <div class="container-md mt-3">
+            <div class="row align-items-start justify-content-between">
 
-            <div class="col-sm-6 col-12 p-0 mt-5 mt-sm-0">
+                <div class="col-sm-6 col-12 p-0 mt-5 mt-sm-0">
 
-                <h6 class="border bg-white shadow-sm p-2 rounded-top-3" style="background-color: #2198f4 !important;  color: #F0F0F0 !important;">Product Ordered</h6>
+                    <h6 class="border bg-white shadow-sm p-2 m-0 text-center fw-bold rounded-top-3" style="background-color: #2198f4 !important;  color: #F0F0F0 !important;">Product Ordered</h6>
 
-                <table class="table">
+                    <table class="table">
 
-                    <tr class=" bg-white shadow-sm p-2">
-                        <th class=" bg-white shadow-sm p-2">Product Name</th>
-                        <th class=" bg-white p-2">Size</th>
-                        <th class=" bg-white p-2">Quantity</th>
-                        <th class=" bg-white  p-2">Price
-                    </tr>
-
-                    <?php foreach ($cart_items as $item): ?>
                         <tr class=" bg-white shadow-sm p-2">
-                            <td style="vertical-align: middle;" class=" bg-white shadow-sm p-2">
-                                <img src="<?php echo $item['image_path']; ?>" alt="<?php echo $row['product_name']; ?>" width="60" height="60">
-                                <?php echo htmlspecialchars($item['product_name']); ?>
-                            </td>
-
-                            <td style="vertical-align: middle;" class=" bg-white  p-2"><?php echo  htmlspecialchars($item['size']); ?></td>
-                            <td style="vertical-align: middle;" class=" bg-white p-2"><?php echo  htmlspecialchars($item['quantity']); ?></td>
-                            <td style="vertical-align: middle;" class=" bg-white  p-2"><?php echo  htmlspecialchars($item['price']); ?></td>
+                            <th class=" bg-white shadow-sm p-2">Product Name</th>
+                            <th class=" bg-white p-2">Size</th>
+                            <th class=" bg-white p-2">Quantity</th>
+                            <th class=" bg-white  p-2">Price
                         </tr>
-                    <?php endforeach; ?>
+
+                        <?php foreach ($cart_items as $item): ?>
+                            <tr class=" bg-white shadow-sm p-2">
+                                <td style="vertical-align: middle;" class=" bg-white shadow-sm p-2">
+                                    <img src="<?php echo $item['image_path']; ?>" alt="<?php echo $row['product_name']; ?>" width="60" height="60">
+                                    <?php echo htmlspecialchars($item['product_name']); ?>
+                                </td>
+
+                                <td style="vertical-align: middle;" class=" bg-white  p-2"><?php echo  htmlspecialchars($item['size']); ?></td>
+                                <td style="vertical-align: middle;" class=" bg-white p-2"><?php echo  htmlspecialchars($item['quantity']); ?></td>
+                                <td style="vertical-align: middle;" class=" bg-white  p-2"><?php echo  htmlspecialchars($item['price']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
 
 
-                </table>
-            </div>
-            <div class="col-sm-5 col-12 p-0 mt-5 mt-sm-0">
-                <h6 class="border bg-white shadow-sm p-2 rounded-top-3" style="background-color: #2198f4 !important;  color: #F0F0F0 !important;">Payment Details</h6>
-                <div class=" p-0 border shadow-sm">
+                    </table>
+                </div>
+                <div class="col-sm-5 col-12 p-0 mt-5 mt-sm-0">
+                    <h6 class="border bg-white shadow-sm p-2 fw-bold rounded-top-3 m-0 text-center" style="background-color: #2198f4 !important;  color: #F0F0F0 !important;">Payment Details</h6>
+                    <div class=" p-0 border m-0 ">
 
-                    <form action="checkout.php<?php echo $item_id ? '?item_id=' . $item_id : ''; ?>" method="POST" enctype="multipart/form-data">
-                        <div class="bg-white border shadow-sm p-2 py-4 d-flex">
-                            <h6 class="me-2">Payment Option:</h6>
+                        <form action="checkout.php<?php echo $item_id ? '?item_id=' . $item_id : ''; ?>" method="POST" enctype="multipart/form-data">
+                            <div class="bg-white border shadow-sm p-2 py-4 d-flex overflow-scroll">
+                                <h6 class="me-2">Payment Option:</h6>
 
-                            <!-- Cashier Option -->
-                            <input type="radio" class="btn-check me-2" name="payment_method" id="payment_method_cashier" value="cashier" autocomplete="off" onclick="toggleGcashReceipt()" required>
-                            <label class="btn btn-warning  me-2" for="payment_method_cashier">Cashier</label>
+                                <!-- Cashier Option -->
+                                <input type="radio" class="btn-check me-2" name="payment_method" id="payment_method_cashier" value="cashier" autocomplete="off" onclick="toggleGcashReceipt()" required>
+                                <label class="btn btn-warning  me-2" for="payment_method_cashier">Cashier</label>
 
-                            <!-- GCash Option -->
-                            <input type="radio" class="btn-check" name="payment_method" id="payment_method_gcash" value="gcash" autocomplete="off" onclick="toggleGcashReceipt()" required>
-                            <label class="btn btn-primary" for="payment_method_gcash">GCash</label>
-                        </div>
+                                <!-- GCash Option -->
+                                <input type="radio" class="btn-check" name="payment_method" id="payment_method_gcash" value="gcash" autocomplete="off" onclick="toggleGcashReceipt()" required>
+                                <label class="btn btn-primary" for="payment_method_gcash">GCash</label>
+                            </div>
 
-                        <div id="gcash_receipt_field" style="display:none;" class="mt-2">
+                            <div id="gcash_receipt_field" style="display:none;" class="mt-2">
 
-                            <label class="border bg-light shadow-sm p-2 my-2 d-flex justify-content-center" for="gcash_receipt" id="btn">Upload GCash Receipt</label>
-                            <input type="file" name="gcash_receipt" id="gcash_receipt" class="d-none">
+                                <label class="border bg-light shadow-sm p-2 my-2 d-flex justify-content-center" for="gcash_receipt" id="btn">Upload GCash Receipt</label>
+                                <input type="file" name="gcash_receipt" id="gcash_receipt" class="d-none">
 
-                            <!-- Button trigger modal -->
-                            <button type="button" class="small bg-light shadow-0 border-0 text-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                                Pay using gcash guide
-                            </button>
+                                <!-- Button trigger modal -->
+                                <button type="button" class="small bg-light shadow-0 border-0 text-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                                    Pay using gcash guide
+                                </button>
 
-                            <!-- Modal -->
-                            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="staticBackdropLabel">Step by Step Gcash Process</h1>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="row">
-                                                <h5>STEP 1 </h5>
-                                                <p>Open Gcash and look for Bills</p>
-                                                <img src="uploads/gcash_tutorial//step1.jpg" class="img-fluid" alt="step1" />
-
+                                <!-- Modal -->
+                                <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="staticBackdropLabel">Step by Step Gcash Process</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
-                                            <div class="row">
-                                                <h5>STEP 2 </h5>
-                                                <p>Navigate to STI</p>
-                                                <img src="uploads/gcash_tutorial//step2.jpg" class="img-fluid" alt="step1" />
-                                            </div>
-                                            <div class="row">
-                                                <h5>STEP 3 </h5>
-                                                <p>Fill up your information correctly</p>
-                                                <img src="uploads/gcash_tutorial//step3.jpg" class="img-fluid" alt="step1" />
-                                            </div>
-                                            <div class="row">
-                                                <h5>STEP 4 </h5>
-                                                <p>Screenshot the receipt and upload it here</p>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <h5>STEP 1 </h5>
+                                                    <p>Open Gcash and look for Bills</p>
+                                                    <img src="uploads/gcash_tutorial//step1.jpg" class="img-fluid" alt="step1" />
 
-                                                <img src="uploads/gcash_tutorial//Example_receipt.jpg" class="img-fluid" alt="step1" />
+                                                </div>
+                                                <div class="row">
+                                                    <h5>STEP 2 </h5>
+                                                    <p>Navigate to STI</p>
+                                                    <img src="uploads/gcash_tutorial//step2.jpg" class="img-fluid" alt="step1" />
+                                                </div>
+                                                <div class="row">
+                                                    <h5>STEP 3 </h5>
+                                                    <p>Fill up your information correctly</p>
+                                                    <img src="uploads/gcash_tutorial//step3.jpg" class="img-fluid" alt="step1" />
+                                                </div>
+                                                <div class="row">
+                                                    <h5>STEP 4 </h5>
+                                                    <p>Screenshot the receipt and upload it here</p>
+
+                                                    <img src="uploads/gcash_tutorial//Example_receipt.jpg" class="img-fluid" alt="step1" />
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="border bg-white shadow-sm p-2 d-flex justify-content-between align-items-center">
-                            <p class="m-0">Total Price: PHP <?php echo number_format($total_price, 2); ?></p>
-                            <button type="submit" name="checkout" class="btn btn-success">Checkout</button>
-                        </div>
-                    </form>
+                            <div class="border bg-white shadow-sm p-2 d-flex justify-content-between align-items-center">
+                                <p class="m-0">Total Price: PHP <?php echo number_format($total_price, 2); ?></p>
+                                <button type="submit" name="checkout" class="btn btn-success">Checkout</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 

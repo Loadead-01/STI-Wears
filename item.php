@@ -44,59 +44,7 @@ if ($item_id > 0) {
     echo "Invalid item ID.";
     exit;
 }
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $size = $_POST['size'];
-    $quantity = intval($_POST['quantity']);
-    $price = floatval($_POST['price']);
-    $total_price = $quantity * $price;
-
-    if (empty($size) || $quantity <= 0 || $quantity > 5) {
-        echo "<div class='alert alert-danger m-0'>Please check your order details. Make sure you choose a size and quantity is not higher than 5.</div>";
-    } else {
-        foreach ($sizes as $size_info) {
-            if ($size_info['size'] == $size) {
-                if ($size_info['stock'] < $quantity) {
-                    echo "<div class='alert alert-danger m-0'>Sorry, we don't have enough stock for Size $size. Only " . $size_info['stock'] . " left.</div>";
-                } else {
-                    if (isset($_POST['action'])) {
-                        if ($_POST['action'] == 'add_to_cart') { 
-                            // Add to cart functionality
-                            $sql_cart = "INSERT INTO `user_account`.`cart` (account_id, item_id, size, quantity, price) VALUES (?, ?, ?, ?, ?)";
-                            $stmt_cart = $conn->prepare($sql_cart);
-                            if (!$stmt_cart) {
-                                die('Prepare failed: ' . $conn->error);
-                            }
-                            $stmt_cart->bind_param('iisis', $account_id, $item_id, $size, $quantity, $price);
-                            $stmt_cart->execute();
-                            if ($stmt_cart->error) {
-                                die('Execute failed: ' . $stmt_cart->error);
-                            }
-                        } else if ($_POST['action'] == 'buy_now') { 
-                            // Buy now functionality
-                            $order_details = [
-                                'item_name' => $item_name,
-                                'size' => $size,
-                                'quantity' => $quantity,
-                                'price' => $price,
-                                'total_price' => $total_price
-                            ];
-
-                            // Store order details in session and redirect to checkout
-                            $_SESSION['checkout_data'] = $order_details;
-                            header("Location: checkout.php?item_id=" . urlencode($item_id));
-                            exit;
-                        }
-                    }
-                }
-                break;
-            }
-        }
-    }
-}
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -115,70 +63,89 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <body class="bg-light">
     <?php include 'header.php'; ?>
+    <div id="message-container" class="alert" style="display: none;"></div>
+
     <div class="p-3">
-    <div class="container-lg mt-4 p-3 bg-white border shadow-sm">
-        <div class="row">
-            <div class="col-sm-6">
-                <!-- Display the item image -->
-                <img src="<?php echo htmlspecialchars($image_path); ?>" alt="Product Image" class="img-fluid border shadow-sm ">
-            </div>
-            <div class="col-sm-6 m-sm-0 mt-4">
-                <h1><?php echo htmlspecialchars($item_name); ?></h1>
+        <div class="container-lg mt-4 p-3 bg-white border shadow-sm">
+            <div class="row">
+                <div class="col-sm-6 d-flex align-items-center">
+                    <img src="<?php echo htmlspecialchars($image_path); ?>" alt="Product Image" class="img-fluid border shadow-sm h-100 w-100">
+                </div>
+                <div class="col-sm-6 m-sm-0 mt-4">
+                    <h2 class="text-dark"><?php echo $item_name; ?></h2>
+                    <form id="order-form" method="POST">
+                        <input type="hidden" name="price" id="price-input">
+                        <input type="hidden" name="size" id="size-input" required>
+                        <input type="hidden" name="action" id="action-input">
+                        <hr>
 
-                <!-- Form for ordering or adding to cart -->
-                <form id="order-form" method="POST">
-                    <input type="hidden" name="price" id="price-input">
-                    <input type="hidden" name="size" id="size-input" required> <!-- Hidden input for size -->
-                    <input type="hidden" name="action" id="action-input"> <!-- Hidden input for action -->
-                    <hr>
-                    <div class="mb-3">
-                        <h5>Select Size:</h5>
-                        <?php foreach ($sizes as $size): ?>
-                            <?php if ($size['stock'] > 0) { ?> <!-- Only display sizes with stock > 0 -->
-                                <button type="button" class="btn btn-outline-primary m-1 size-btn"
-                                    data-size="<?php echo htmlspecialchars($size['size']); ?>"
-                                    data-price="<?php echo htmlspecialchars($size['price']); ?>"
-                                    data-stock="<?php echo htmlspecialchars($size['stock']); ?>">
-                                    <?php echo strtoupper(htmlspecialchars($size['size'])); ?>
-                                </button>
-                            <?php } ?>
-                        <?php endforeach; ?>
-                    </div>
+                        <div class="mb-3 lh-1 m-0">
+                            <p class="text-secondary"><strong>Select Size : </strong></p>
+                            <?php foreach ($sizes as $size): ?>
+                                <?php if ($size['stock'] > 0) { ?>
+                                    <button type="button" class="btn btn-outline-primary m-1 size-btn"
+                                        data-size="<?php echo htmlspecialchars($size['size']); ?>"
+                                        data-price="<?php echo htmlspecialchars($size['price']); ?>"
+                                        data-stock="<?php echo htmlspecialchars($size['stock']); ?>">
+                                        <?php echo strtoupper(htmlspecialchars($size['size'])); ?>
+                                    </button>
+                                <?php } ?>
+                            <?php endforeach; ?>
+                        </div>
 
-                    <div class="mb-3">
-                        <p><strong>Price:</strong> PHP <span id="price-display">0.00</span></p>
-                        <p><strong>Stock Available:</strong> <span id="stock-display">0</span></p>
-                    </div>
+                        <div class="mb-3">
+                            <p class="lh-1 m-0 text-secondary"><strong>Price :</strong> PHP <span id="price-display">0.00</span></p>
+                            <p class="lh-1 m-0 text-secondary"><strong>Stock Available :</strong> <span id="stock-display">0</span></p>
+                        </div>
+                        <hr>
 
-                    <div class="mb-3">
-                        <label for="quantity">Quantity:</label>
-                        <input type="number" name="quantity" id="quantity" class="form-control" min="1" value="1" required>
-                    </div>
 
-                    <button type="button" class="btn btn-primary" id="add-to-cart">Add to Cart</button>
-                    <button type="button" class="btn btn-success" id="place-order">Order Now</button>
-                </form>
+                        <P class="text-secondary"><strong>Product Description </strong></P>
+
+                        <p aria-disabled="true">
+                            <span class="placeholder col-6" style="cursor: default !important;"></span>
+                            <span class="placeholder col-2" style="cursor: default !important;"></span>
+                            <span class="placeholder col-2" style="cursor: default !important;"></span>
+                            <span class="placeholder col-1" style="cursor: default !important;"></span>
+                            <span class="placeholder col-2" style="cursor: default !important;"></span>
+                            <span class="placeholder col-3" style="cursor: default !important;"></span>
+                        </p>
+                        <p aria-disabled="true">
+                            <span class="placeholder col-3" style="cursor: default !important;"></span>
+                            <span class="placeholder col-4" style="cursor: default !important;"></span>
+                            <span class="placeholder col-2" style="cursor: default !important;"></span>
+                            <span class="placeholder col-3" style="cursor: default !important;"></span>
+                            <span class="placeholder col-2" style="cursor: default !important;"></span>
+                            <span class="placeholder col-5" style="cursor: default !important;"></span>
+                        </p>
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="quantity">Quantity:</label>
+                            <input type="number" name="quantity" id="quantity" class="form-control" min="1" value="1" max="5" required>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-primary" id="add-to-cart">Add to Cart</button>
+                            <button type="button" class="btn btn-success" id="place-order">Order Now</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-    </div>
-  
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Update price and stock when size buttons are clicked
         const sizeButtons = document.querySelectorAll('.size-btn');
         const priceDisplay = document.getElementById('price-display');
         const stockDisplay = document.getElementById('stock-display');
         const priceInput = document.getElementById('price-input');
         const sizeInput = document.getElementById('size-input');
-        const actionInput = document.getElementById('action-input');
 
         sizeButtons.forEach(button => {
             button.addEventListener('click', function() {
-                // Remove 'selected' class from all buttons
                 sizeButtons.forEach(btn => btn.classList.remove('selected'));
-
-                // Add 'selected' class to the clicked button
                 this.classList.add('selected');
 
                 const size = this.getAttribute('data-size');
@@ -188,29 +155,139 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 priceDisplay.textContent = `${price}`;
                 stockDisplay.textContent = stock;
                 priceInput.value = price;
-                sizeInput.value = size; // Set the selected size in hidden input
+                sizeInput.value = size;
             });
         });
 
+        // add to cart
+        $('#add-to-cart').on('click', function() {
+            const size = sizeInput.value;
+            const price = priceInput.value;
+            const quantity = $('#quantity').val();
 
+            const messageContainer = $('#message-container');
 
-        // Update event listener for 'Order Now'
-        document.getElementById('place-order').addEventListener('click', function() {
-            actionInput.value = 'buy_now'; // Set action for 'Buy Now'
-            document.getElementById('order-form').submit();
+            // Validation
+            if (!size || quantity <= 0) {
+                messageContainer
+                    .removeClass()
+                    .addClass('alert alert-danger')
+                    .html('Please select a size and a valid quantity.')
+                    .show();
+                hideMessageAfterDelay(messageContainer);
+
+                return;
+            }
+
+            if (quantity > 5) {
+                messageContainer
+                    .removeClass()
+                    .addClass('alert alert-danger')
+                    .html('Order quantity must not be greater than 5')
+                    .show();
+                hideMessageAfterDelay(messageContainer);
+
+                return;
+            }
+
+            $.ajax({
+                url: 'add_to_cart.php',
+                method: 'POST',
+                data: {
+                    action: 'add_to_cart',
+                    item_id: '<?php echo $item_id; ?>',
+                    account_id: '<?php echo $account_id; ?>',
+                    size: size,
+                    quantity: quantity,
+                    price: price
+                },
+                success: function(response) {
+                    messageContainer
+                        .removeClass()
+                        .addClass('alert alert-success')
+                        .html('Item successfully added to cart!')
+                        .show();
+                    hideMessageAfterDelay(messageContainer);
+
+                },
+                error: function(xhr, status, error) {
+                    messageContainer
+                        .removeClass()
+                        .addClass('alert alert-danger')
+                        .html('Failed to add item to cart: ' + error)
+                        .show();
+                    hideMessageAfterDelay(messageContainer);
+                }
+            });
         });
 
-        // Update 'Add to Cart' listener
-        document.getElementById('add-to-cart').addEventListener('click', function() {
-            actionInput.value = 'add_to_cart'; // Set action for 'Add to Cart'
-            document.getElementById('order-form').submit();
+        // if buy now click
+        $('#place-order').on('click', function() {
+            const size = sizeInput.value;
+            const price = priceInput.value;
+            const quantity = $('#quantity').val();
+            const messageContainer = $('#message-container');
+
+
+            if (!size || quantity <= 0) {
+                messageContainer
+                    .removeClass()
+                    .addClass('alert alert-danger')
+                    .html('Please select a size and a valid quantity.')
+                    .show();
+                hideMessageAfterDelay(messageContainer);
+                return;
+            }
+
+            if (quantity > 5) {
+                messageContainer
+                    .removeClass()
+                    .addClass('alert alert-danger')
+                    .html('Order quantity must not be greater than 5')
+                    .show();
+                hideMessageAfterDelay(messageContainer);
+
+                return;
+            }
+
+            $.ajax({
+                url: 'checkout_data.php', 
+                method: 'POST',
+                data: {
+                    item_id: '<?php echo $item_id; ?>',
+                    size: size,
+                    quantity: quantity,
+                    price: price
+                },
+                success: function(response) {
+                    messageContainer
+                    .removeClass()
+                    .addClass('alert alert-danger')
+                    .html('test ' + size + quantity )
+                    .show
+                    hideMessageAfterDelay(messageContainer);
+                    // window.location.href = 'checkout.php';
+                },
+                error: function(xhr, status, error) {
+                    messageContainer
+                        .removeClass()
+                        .addClass('alert alert-danger')
+                        .html('Failed to set checkout data: ' + error)
+                        .show();
+                    hideMessageAfterDelay(messageContainer);
+                }
+            });
+
+            // go to order details
+            window.location.href = `checkout.php?item_id=<?php echo $item_id; ?>&size=${size}&quantity=${quantity}&price=${price}`;
         });
+
+        function hideMessageAfterDelay(container) {
+            setTimeout(() => {
+                container.fadeOut();
+            }, 3000);
+        }
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-
 </body>
 
 </html>
