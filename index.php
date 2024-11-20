@@ -1,9 +1,4 @@
 <?php
-date_default_timezone_set('Asia/Manila');
-
-// Display current date and time
-echo date("Y-m-d H:i:s");
-session_start();
 
 if (isset($_SESSION["user"])) {
   header("Location: dashboard.php");
@@ -54,7 +49,10 @@ if (isset($_SESSION["admin"])) {
 <body>
 
   <?php include "function/login_func.php" ?>
+
+
   
+
   <div class="d-block">
     <nav class="navbar navbar-expand-sm bg-light sticky-top border-bottom">
       <div class="container-xxl">

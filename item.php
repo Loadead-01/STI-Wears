@@ -52,18 +52,62 @@ if ($item_id > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Product</title>
+    <link href="style.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .size-btn.selected {
             background-color: #007bff;
             color: white;
         }
+
+        .color-blue {
+            background-color: #ffcc14 !important;
+            color: #444 !important;
+            font-weight: bold !important;
+        }
     </style>
 </head>
 
 <body class="bg-light">
     <?php include 'header.php'; ?>
-    <div id="message-container" class="alert" style="display: none;"></div>
+    <div id="cartNotif" class="message-container position-fixed bottom-0 end-0 p-3 rounded-2" style="display: none;">
+        <div class="bg-white border shadow-sm rounded-3">
+            <div class="toast-header border-bottom p-2 color-blue rounded-top-3">
+                <strong class="me-auto"><i class="bi bi-bell-fill"></i>Notification</strong>
+                
+            </div>
+
+            <div id="message" class="toast-body p-2">
+                Item added to cart successfully
+            </div>
+        </div>
+    </div>
+    <div id="quantityNotif" class="message-container position-fixed bottom-0 end-0 p-3 rounded-2" style="display: none;">
+        <div class="bg-white border shadow-sm rounded-3">
+            <div class="toast-header border-bottom p-2 color-blue rounded-top-3">
+            <strong class="me-auto"><i class="bi bi-bell-fill"></i>Notification</strong>
+
+                
+            </div>
+
+            <div id="message" class="toast-body p-2">
+                order quantity must not be greater than 5
+            </div>
+        </div>
+    </div>
+    <div id="sizeNotif" class="message-container position-fixed bottom-0 end-0 p-3 rounded-2" style="display: none;">
+        <div class="bg-white border shadow-sm rounded-3">
+            <div class="toast-header border-bottom p-2 color-blue rounded-top-3">
+            <strong class="me-auto"><i class="bi bi-bell-fill"></i>Notification</strong>
+
+                
+            </div>
+
+            <div id="message" class="toast-body p-2">
+                Please make sure to select an item size
+            </div>
+        </div>
+    </div>
 
     <div class="p-3">
         <div class="container-lg mt-4 p-3 bg-white border shadow-sm">
@@ -164,29 +208,24 @@ if ($item_id > 0) {
             const size = sizeInput.value;
             const price = priceInput.value;
             const quantity = $('#quantity').val();
+            const cartNotif = $("#cartNotif")
+            const quantityNotif = $('#quantityNotif');
+            const sizeNotif = $('#sizeNotif');
 
-            const messageContainer = $('#message-container');
+
 
             // Validation
             if (!size || quantity <= 0) {
-                messageContainer
-                    .removeClass()
-                    .addClass('alert alert-danger')
-                    .html('Please select a size and a valid quantity.')
+                sizeNotif
                     .show();
-                hideMessageAfterDelay(messageContainer);
-
+                hideMessageAfterDelay(sizeNotif);
                 return;
             }
 
             if (quantity > 5) {
-                messageContainer
-                    .removeClass()
-                    .addClass('alert alert-danger')
-                    .html('Order quantity must not be greater than 5')
+                quantityNotif
                     .show();
-                hideMessageAfterDelay(messageContainer);
-
+                hideMessageAfterDelay(quantityNotif);
                 return;
             }
 
@@ -202,12 +241,10 @@ if ($item_id > 0) {
                     price: price
                 },
                 success: function(response) {
-                    messageContainer
-                        .removeClass()
-                        .addClass('alert alert-success')
-                        .html('Item successfully added to cart!')
+                    cartNotif
+                        //.find("#message").html('Item successfully added to cart!')
                         .show();
-                    hideMessageAfterDelay(messageContainer);
+                    hideMessageAfterDelay(cartNotif);
 
                 },
                 error: function(xhr, status, error) {
@@ -226,32 +263,27 @@ if ($item_id > 0) {
             const size = sizeInput.value;
             const price = priceInput.value;
             const quantity = $('#quantity').val();
-            const messageContainer = $('#message-container');
+            const cartNotif = $("#cartNotif")
+            const quantityNotif = $('#quantityNotif');
+            const sizeNotif = $('#sizeNotif');
 
 
             if (!size || quantity <= 0) {
-                messageContainer
-                    .removeClass()
-                    .addClass('alert alert-danger')
-                    .html('Please select a size and a valid quantity.')
+                sizeNotif
                     .show();
-                hideMessageAfterDelay(messageContainer);
+                hideMessageAfterDelay(sizeNotif);
                 return;
             }
 
             if (quantity > 5) {
-                messageContainer
-                    .removeClass()
-                    .addClass('alert alert-danger')
-                    .html('Order quantity must not be greater than 5')
+                quantityNotif
                     .show();
-                hideMessageAfterDelay(messageContainer);
-
+                hideMessageAfterDelay(quantityNotif);
                 return;
             }
 
             $.ajax({
-                url: 'checkout_data.php', 
+                url: 'checkout_data.php',
                 method: 'POST',
                 data: {
                     item_id: '<?php echo $item_id; ?>',
@@ -261,12 +293,12 @@ if ($item_id > 0) {
                 },
                 success: function(response) {
                     messageContainer
-                    .removeClass()
-                    .addClass('alert alert-danger')
-                    .html('test ' + size + quantity )
-                    .show
+                        .removeClass()
+                        .addClass('alert alert-danger')
+                        .html('test ' + size + quantity)
+                        .show
                     hideMessageAfterDelay(messageContainer);
-                    // window.location.href = 'checkout.php';
+                    //window.location.href = 'checkout.php';
                 },
                 error: function(xhr, status, error) {
                     messageContainer
